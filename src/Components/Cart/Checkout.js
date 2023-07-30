@@ -38,7 +38,18 @@ const Checkout = (props) => {
             postalCode: enteredPostalCodeIsValid
         })
 
-        const formIsValid = enteredCityIsValid && enteredStreetIsValid && enteredPostalCodeIsValid && enteredNameIsValid
+        const formIsValid = enteredCityIsValid && enteredStreetIsValid && enteredPostalCodeIsValid && enteredNameIsValid;
+
+        if(!formIsValid) {
+            return;
+        }
+
+        props.onSubmit({
+            name: enteredName,
+            street: enteredStreet,
+            city: enteredCity,
+            postalCode : enteredPostalCode,
+        });
     }
   return (
     <form className={classes.form} onSubmit={confirmHandler}>

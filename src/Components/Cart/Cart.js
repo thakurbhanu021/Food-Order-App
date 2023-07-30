@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import React, { useContext, useState } from "react";
 
 import Modal from "../UI/Modal";
 import classes from "./Cart.module.css";
@@ -9,6 +9,8 @@ import Checkout from "./Checkout";
 const Cart = (props) => {
   const cartCtx = useContext(CartContext);
   const [isCheckout, setIsCheckout] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [didSubmit, setDidSubmit] = useState(false);
 
   const totalAmount = `$${cartCtx.totalAmount.toFixed(2)}`;
   const hasItems = cartCtx.items.length > 0;
@@ -39,6 +41,24 @@ const Cart = (props) => {
     setIsCheckout(true);
   };
 
+  const submitHandler = (userData) => {
+    setIsSubmitting(true);
+    fetch(
+      "https://food-order-app-react-6fc17-default-rtdb.firebaseio.com/Orders.json",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          user: userData,
+          orderedItems: cartCtx.items,
+          totalAmount: `$${cartCtx.totalAmount.toFixed(2)}`,
+        }),
+      }
+    );
+    setIsSubmitting(false);
+    setDidSubmit(true);
+    cartCtx.clearCart();;
+  };
+
   const modalActions = (
     <div className={classes.actions}>
       <button className={classes["button--alt"]} onClick={props.onHideCart}>
@@ -51,15 +71,38 @@ const Cart = (props) => {
       )}
     </div>
   );
-  return (
-    <Modal onClick={props.onHideCart}>
+
+  const modalContent = (
+    <React.Fragment>
       {cartItems}
       <div className={classes.total}>
         <span>Total Amount</span>
         <span>{totalAmount}</span>
       </div>
-      {isCheckout && <Checkout onClick={props.onHideCart}/>}
+      {isCheckout && (
+        <Checkout onSubmit={submitHandler} onClick={props.onHideCart} />
+      )}
       {!isCheckout && modalActions}
+    </React.Fragment>
+  );
+
+  const isSubmittingModalContent = <p>Sending cart Data.. Please Wait..</p>;
+
+  const didSubmitModalContent = (
+    <React.Fragment>
+      <p>Order successfully received!!</p>
+      <div className={classes.actions}>
+        <button className={classes["button--alt"]} onClick={props.onHideCart}>
+          Close
+        </button>
+      </div>
+    </React.Fragment>
+  );
+  return (
+    <Modal onClick={props.onHideCart}>
+      {!isSubmitting && !didSubmit && modalContent}
+      {isSubmitting && isSubmittingModalContent}
+      {!isSubmitting && didSubmit && didSubmitModalContent}
     </Modal>
   );
 };
